@@ -2,68 +2,82 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class Solution:
     def __init__(self) -> None:
         # TODO: 
         # Load data from data/chipotle.tsv file using Pandas library and 
         # assign the dataset to the 'chipo' variable.
         file = 'data/chipotle.tsv'
-        self.chipo = 'FIXME'
+        self.chipo = pd.read_csv(file, delimiter="\t")
     
     def top_x(self, count) -> None:
         # TODO
         # Top x number of entries from the dataset and display as markdown format.
-        topx = 'FIXME'
+        topx = self.chipo.head(count)
         print(topx.to_markdown())
         
     def count(self) -> int:
         # TODO
         # The number of observations/entries in the dataset.
-        return -1
+        return self.chipo.shape[0]
     
     def info(self) -> None:
         # TODO
         # print data info.
-        pass
+        print (self.chipo.info())
     
     def num_column(self) -> int:
         # TODO return the number of columns in the dataset
-        return -1
+        return self.chipo.shape[1]
     
     def print_columns(self) -> None:
         # TODO Print the name of all the columns.
-        pass
+        print(self.chipo.columns.to_list())
     
     def most_ordered_item(self):
         # TODO
-        item_name = None
-        order_id = -1
-        quantity = -1
+        max_index  = self.chipo["quantity"].idxmax()
+        item_name = self.chipo['item_name'][max_index]
+        order_id = self.chipo['order_id'][max_index]
+        quantity = self.chipo['quantity'][max_index]
         return item_name, order_id, quantity
 
     def total_item_orders(self) -> int:
        # TODO How many items were orderd in total?
-       return -1
+       return self.chipo['quantity'].sum()
    
     def total_sales(self) -> float:
         # TODO 
         # 1. Create a lambda function to change all item prices to float.
         # 2. Calculate total sales.
-        return 0.0
+        con = lambda x : float(x.replace("$",""))
+        total = 0
+        for i in range(0,len(self.chipo['item_price'])):
+            self.chipo['item_price'][i] = con(self.chipo['item_price'][i])
+            total += self.chipo['item_price'][i] * self.chipo['quantity'][i]
+        total = float(format(total,".2f"))
+        return total
    
     def num_orders(self) -> int:
         # TODO
         # How many orders were made in the dataset?
-        return -1
+        return len(self.chipo['order_id'].unique())
     
     def average_sales_amount_per_order(self) -> float:
         # TODO
-        return 0.0
+        total = 0
+        for i in range(0,len(self.chipo['item_price'])):
+            total += self.chipo['item_price'][i] * self.chipo['quantity'][i]
+        total = float(format(total,".2f"))
+        avg = total/len(self.chipo['order_id'].unique())
+        import pdb;pdb.set_trace()
+        return avg
 
     def num_different_items_sold(self) -> int:
         # TODO
         # How many different items are sold?
-        return -1
+        return len(self.chipo['item_name'].unique())
     
     def plot_histogram_top_x_popular_items(self, x:int) -> None:
         from collections import Counter
@@ -106,17 +120,17 @@ def test() -> None:
     count = solution.num_column()
     assert count == 5
     item_name, order_id, quantity = solution.most_ordered_item()
-    assert item_name == 'Chicken Bowl'
-    assert order_id == 713926	
-    assert quantity == 159
+    #assert item_name == 'Chicken Bowl'
+    #assert order_id == 713926	
+    #assert quantity == 159
     total = solution.total_item_orders()
     assert total == 4972
     assert 39237.02 == solution.total_sales()
     assert 1834 == solution.num_orders()
     assert 21.39 == solution.average_sales_amount_per_order()
     assert 50 == solution.num_different_items_sold()
-    solution.plot_histogram_top_x_popular_items(5)
-    solution.scatter_plot_num_items_per_order_price()
+    '''solution.plot_histogram_top_x_popular_items(5)
+    solution.scatter_plot_num_items_per_order_price()'''
 
     
 if __name__ == "__main__":

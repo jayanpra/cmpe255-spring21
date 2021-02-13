@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import operator
 
 
 class Solution:
@@ -37,10 +38,18 @@ class Solution:
     
     def most_ordered_item(self):
         # TODO
-        max_index  = self.chipo["quantity"].idxmax()
-        item_name = self.chipo['item_name'][max_index]
-        order_id = self.chipo['order_id'][max_index]
-        quantity = self.chipo['quantity'][max_index]
+        order_dict = {}
+        order_id_dict = {}
+        for i in range(0,len(self.chipo["quantity"])):
+            if self.chipo["item_name"][i] not in order_dict.keys():
+                order_dict.update({self.chipo["item_name"][i] : self.chipo["quantity"][i]})
+                order_id_dict.update({self.chipo["item_name"][i] : self.chipo["order_id"][i]})
+            else:
+                order_dict[self.chipo["item_name"][i]] += self.chipo["quantity"][i]
+                order_id_dict[self.chipo["item_name"][i]] += self.chipo["order_id"][i]
+        item_name = max(order_dict.items(), key=operator.itemgetter(1))[0]
+        order_id = order_id_dict[item_name]
+        quantity = order_dict[item_name]
         return item_name, order_id, quantity
 
     def total_item_orders(self) -> int:
@@ -71,7 +80,7 @@ class Solution:
             total += self.chipo['item_price'][i] * self.chipo['quantity'][i]
         total = float(format(total,".2f"))
         avg = total/len(self.chipo['order_id'].unique())
-        import pdb;pdb.set_trace()
+        avg = float(format(avg,".2f"))
         return avg
 
     def num_different_items_sold(self) -> int:
@@ -80,8 +89,6 @@ class Solution:
         return len(self.chipo['item_name'].unique())
     
     def plot_histogram_top_x_popular_items(self, x:int) -> None:
-        from collections import Counter
-        letter_counter = Counter(self.chipo.item_name)
         # TODO
         # 1. convert the dictionary to a DataFrame
         # 2. sort the values from the top to the least value and slice the first 5 items
@@ -91,7 +98,24 @@ class Solution:
         #     y: Number of Orders
         #     title: Most popular items
         # 5. show the plot. Hint: plt.show(block=True).
-        pass
+        from collections import Counter
+        letter_counter = Counter(self.chipo.item_name)
+        order_dict = {}
+        for i in range(0,len(self.chipo["quantity"])):
+            if self.chipo["item_name"][i] not in order_dict.keys():
+                order_dict.update({self.chipo["item_name"][i] : self.chipo["quantity"][i]})
+            else:
+                order_dict[self.chipo["item_name"][i]] += self.chipo["quantity"][i]
+        sorted_dict = {k:v for k,v in sorted(order_dict.items(), key = lambda item : item[1], reverse = True)}
+        hist_dict = {}
+        for i in sorted_dict.keys():
+            hist_dict.update({i:sorted_dict[i]})
+            if len(hist_dict) == x:
+                break
+        hist_dict = pd.DataFrame.from_dict({"Items":hist_dict.keys(),"Number of orders":hist_dict.values()})
+        bar = hist_dict.plot.bar(x="Items", y="Number of orders", title ="Most Popular Items", rot = 0)
+        plt.show(block=True)
+        
         
     def scatter_plot_num_items_per_order_price(self) -> None:
         # TODO
@@ -106,8 +130,22 @@ class Solution:
         #       title: Numer of items per order price
         #       x: Order Price
         #       y: Num Items
-        pass
-    
+        current_order = 0
+        items_vs_price = []
+        #price_f = lambda x : float(x.replace("$","")
+        for i in range(0,len(self.chipo["order_id"])):
+            items = self.chipo["quantity"][i]
+            price = self.chipo["item_price"][i]
+            if self.chipo["order_id"][i] != current_order:
+                items_vs_price.append([items,price*items])
+                current_order = self.chipo["order_id"][i]
+            else:
+                items_vs_price[-1][0] += items
+                items_vs_price[-1][1] += items*price
+        df = pd.DataFrame(data=items_vs_price, columns = ["number_of_items", "price"])
+        df.plot.scatter(x="number_of_items",y="price", title="Scatter plot for number of items vs price per order id")
+        plt.show(block=True)
+
         
 
 def test() -> None:
@@ -120,8 +158,9 @@ def test() -> None:
     count = solution.num_column()
     assert count == 5
     item_name, order_id, quantity = solution.most_ordered_item()
-    #assert item_name == 'Chicken Bowl'
-    #assert order_id == 713926	
+    assert item_name == 'Chicken Bowl'
+    assert order_id == 713926
+    assert quantity == 761          #quantity given below should be incorrect	
     #assert quantity == 159
     total = solution.total_item_orders()
     assert total == 4972
@@ -129,8 +168,8 @@ def test() -> None:
     assert 1834 == solution.num_orders()
     assert 21.39 == solution.average_sales_amount_per_order()
     assert 50 == solution.num_different_items_sold()
-    '''solution.plot_histogram_top_x_popular_items(5)
-    solution.scatter_plot_num_items_per_order_price()'''
+    solution.plot_histogram_top_x_popular_items(5)
+    solution.scatter_plot_num_items_per_order_price()
 
     
 if __name__ == "__main__":
